@@ -1,0 +1,23 @@
+ [
+    {
+        "Id": "347gfyr46",
+        "Email": "xyz@gmail.com",
+        "FirstName": "xyz",
+        "MailingCountry": "India",
+        "Title": "developer",
+        "MailingCity": "Hyderabad",
+        "type": "Contact",
+        "OtherState": "Tamilnadu",
+        "OtherStreet": "kalava",
+        "MailingState": "Telangana",
+        "MobilePhone": "9542682920",
+        "OtherCity": "banglore",
+        "MailingPostalCode": "56675",
+        "OtherCountry": "US",
+        "LastName": "ysd",
+        "MailingStreet": "main raod",
+        "ExternalId__c": 1,
+        "SyncNewRecordToDb__c": "true",
+        "SyncUpdatedRecordToDb__c": "true"
+            }
+  ]

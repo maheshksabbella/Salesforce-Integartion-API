@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+    
+    <flow name="ic-sfdc-sapi-main">
+        <http:listener config-ref="ic-sfdc-sapi-httpListenerConfig1" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="ic-sfdc-sapi-config1" />
+		<error-handler ref="Error_Handler" />
+    </flow>
+    <flow name="ic-sfdc-sapi-console">
+        <http:listener config-ref="ic-sfdc-sapi-httpListenerConfig1" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <choice doc:name="Choice" doc:id="31fbfb36-d83c-45ba-a6e4-677b5077a5b8" >
+			<when expression="${enableConsole}">
+				<apikit:console config-ref="ic-sfdc-sapi-config1" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="40e67acc-1d42-43f6-852c-d0c9cde9b116" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    errors:[
+    {
+        "error_code": "RESOURCE-NOT-FOUND",
+        "error_message": "Resource not found"
+    }]
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+	<flow name="put:\contacts\(id):application\json:ic-sfdc-sapi-config1" doc:id="2b19f266-8895-42ef-bb4e-9549cad89eb0" >
+		<logger level="INFO" doc:name="Put Flow Started" doc:id="283873eb-1472-4714-87e4-0e3e39038dd0" message="Flow Started" />
+		<flow-ref doc:name="Calling Udpate Contact Flow" doc:id="41ba2daa-feaa-4f2c-aef8-e186233a5c77" name="put:\contacts\(id):application\json:ic-sfdc-sapi-config" />
+		<logger level="INFO" doc:name="Put Flow Ended" doc:id="758cd170-6db5-4979-ae64-619916dbae23" message="Flow Ended" />
+	</flow>
+	<flow name="delete:\contacts\(id):ic-sfdc-sapi-config1" doc:id="210e345c-7a81-41aa-94ef-d9f2bae7f3b9" >
+		<logger level="INFO" doc:name="Delete Flow Started" doc:id="31137a6c-4119-42e4-8742-97135d5a2b79" message="Flow Started" />
+		<flow-ref doc:name="Calling Delete Contact Flow" doc:id="af8b47cb-4c21-43be-8d24-4b220b2c308a" name="delete:\contacts\(id):ic-sfdc-sapi-config" />
+		<logger level="INFO" doc:name="Delete Flow Ended" doc:id="45d24ad2-f18c-49dd-9da3-c5c73ffcf1f5" message="Flow Ended" />
+	</flow>
+	<flow name="get:\contacts:ic-sfdc-sapi-config1" doc:id="a658ab74-aebb-45ff-ae8c-df6bde6dcb20" >
+		<logger level="INFO" doc:name="Get Contacts Flow Started" doc:id="0c5b91f6-b3b7-4313-8a7a-8dae74ac5524" message="Flow Started" />
+		<flow-ref doc:name="Calling Get Contacts Flow" doc:id="aa034b5c-e03c-45b3-93a6-e14645e2d0e6" name="get:\contacts:ic-sfdc-sapi-config" />
+		<logger level="INFO" doc:name="Get Contacts Flow Ended" doc:id="716c70c3-79e0-4728-8645-cc90ffef38d4" message="Flow Ended" />
+	</flow>
+	<flow name="get:\contacts\(id):ic-sfdc-sapi-config1" doc:id="4eaa1929-1fd2-4107-9468-a522329c3812" >
+		<logger level="INFO" doc:name="Get Contact  By Id  Flow Started" doc:id="4583a337-f2ac-4a87-b0e1-597ac63141cb" message="Flow Started" />
+		<flow-ref doc:name="Calling Get Contacts Flow" doc:id="9d00e735-679b-4cdd-be23-a89c53b646d8" name="get:\contacts\(id):ic-sfdc-sapi-config" />
+		<logger level="INFO" doc:name="Get Contact By Id Flow Ended" doc:id="04101636-0b26-4ee4-a143-95e5fd5daf69" message="Flow Ended" />
+	</flow>
+	<flow name="post:\contacts:application\json:ic-sfdc-sapi-config1" doc:id="dc671db5-dd70-4eb1-9693-dea94a106f6d" >
+		<logger level="INFO" doc:name="Create Contact Flow Started" doc:id="1667b60b-a9b8-45f6-a765-4b59467d26ba" message="Flow Started" />
+		<flow-ref doc:name="Calling Post Flow" doc:id="97b13aa3-f769-4c9f-af6e-ed42f1218e42" name="post:\contacts:application\json:ic-sfdc-sapi-config" />
+		<logger level="INFO" doc:name="Create Contact Flow Ended" doc:id="1508e887-2a27-423c-8618-789a7c3052f5" message="Flow ended" />
+	</flow>
+</mule>

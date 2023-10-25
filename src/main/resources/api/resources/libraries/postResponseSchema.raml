@@ -1,0 +1,23 @@
+#%RAML 1.0 Library
+types:
+  response:
+    type: object
+    properties:
+        is_success:
+          type: boolean
+        responses:
+          type: array
+          items:
+            type: object
+            properties:
+              payload:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  id:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
